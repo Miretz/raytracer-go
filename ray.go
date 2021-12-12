@@ -14,14 +14,14 @@ func (r *ray) at(t float64) point3 {
 
 func Ray_HitSphere(center *point3, radius float64, r *ray) float64 {
 	oc := Vec3_Sub(&r.origin, center)
-	a := Vec3_Dot(&r.direction, &r.direction)
-	b := 2.0 * Vec3_Dot(&oc, &r.direction)
-	c := Vec3_Dot(&oc, &oc) - radius*radius
-	discriminant := b*b - 4*a*c
+	a := r.direction.LengthSquared()
+	halfB := Vec3_Dot(&oc, &r.direction)
+	c := oc.LengthSquared() - radius*radius
+	discriminant := halfB*halfB - a*c
 	if discriminant < 0 {
 		return -1.0
 	} else {
-		return (-b - math.Sqrt(discriminant)) / (2.0 * a)
+		return (-halfB - math.Sqrt(discriminant)) / a
 	}
 }
 
