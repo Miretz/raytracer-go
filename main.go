@@ -26,13 +26,10 @@ func writePPM() {
 
 	for j := 0; j < imageHeight; j++ {
 		for i := 0; i < imageWidth; i++ {
-			r := float64(i) / (imageWidth - 1)
-			g := float64(j) / (imageHeight - 1)
-			b := 0.25
-			ir := int32(255.999 * r)
-			ig := int32(255.999 * g)
-			ib := int32(255.999 * b)
-			linesToWrite = append(linesToWrite, fmt.Sprintf("%d %d %d", ir, ig, ib))
+			pixelColor := color{
+				float64(i) / (imageWidth - 1),
+				float64(j) / (imageHeight - 1), 0.25}
+			linesToWrite = append(linesToWrite, WriteColor(&pixelColor))
 		}
 	}
 
