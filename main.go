@@ -7,11 +7,29 @@ import (
 	"os"
 )
 
-const imageWidth = 256
-const imageHeight = 256
-const outputFile = "./output.ppm"
-
 func writePPM() {
+
+	// Image
+	const aspectRatio = 16.0 / 9.0
+	const imageWidth = 400
+	const imageHeight = int(imageWidth / aspectRatio)
+	const outputFile = "./output.ppm"
+
+	// Camera
+	viewportHeight := 2.0
+	viewportWidth := aspectRatio * viewportHeight
+	focalLength := 1.0
+
+	origin := point3{0, 0, 0}
+	horizontal := vec3{viewportWidth, 0, 0}
+	vertical := vec3{0, viewportHeight, 0}
+
+	lowerLeftCorner := origin.SubMultiple(
+		horizontal.Div(2.0),
+		vertical.Div(2.0),
+		vec3{0, 0, focalLength})
+
+	// Render
 	file, err := os.Create(outputFile)
 	if err != nil {
 		log.Fatal(err)
@@ -24,11 +42,16 @@ func writePPM() {
 		"255",
 	}
 
-	for j := 0; j < imageHeight; j++ {
+	for j := imageHeight; j >= 0; j-- {
 		for i := 0; i < imageWidth; i++ {
-			pixelColor := color{
-				float64(i) / (imageWidth - 1),
-				float64(j) / (imageHeight - 1), 0.25}
+			u := float64(i) / float64(imageWidth-1)
+			v := float64(j) / float64(imageHeight-1)
+			r := ray{origin, Vec3_AddMultiple(
+				lowerLeftCorner,
+				horizontal.Mul(u),
+				vertical.Mul(v),
+				origin.Neg())}
+			pixelColor := Ray_Color(&r)
 			linesToWrite = append(linesToWrite, WriteColor(&pixelColor))
 		}
 	}

@@ -11,13 +11,6 @@ type vec3 struct {
 	z float64
 }
 
-func (a *vec3) Neg() vec3 {
-	a.x = -a.x
-	a.y = -a.y
-	a.z = -a.z
-	return *a
-}
-
 func (a *vec3) Get(i int) float64 {
 	switch i {
 	case 0:
@@ -44,25 +37,28 @@ func (a *vec3) GetRef(i int) *float64 {
 	}
 }
 
+func (a *vec3) Neg() vec3 {
+	return vec3{-a.x, -a.y, -a.z}
+}
+
 func (a *vec3) Add(b *vec3) vec3 {
-	a.x += b.x
-	a.y += b.y
-	a.z += b.z
-	return *a
+	return Vec3_Add(a, b)
 }
 
 func (a *vec3) Sub(b *vec3) vec3 {
-	a.x -= b.x
-	a.y -= b.y
-	a.z -= b.z
-	return *a
+	return Vec3_Sub(a, b)
+}
+
+func (a *vec3) AddMultiple(vecs ...vec3) vec3 {
+	return Vec3_AddMultiple(append(vecs, *a)...)
+}
+
+func (a *vec3) SubMultiple(vecs ...vec3) vec3 {
+	return Vec3_SubMultiple(a, vecs...)
 }
 
 func (a *vec3) Mul(t float64) vec3 {
-	a.x *= t
-	a.y *= t
-	a.z *= t
-	return *a
+	return vec3{a.x * t, a.y * t, a.z * t}
 }
 
 func (a *vec3) Div(t float64) vec3 {
@@ -91,12 +87,28 @@ func Vec3_Add(a *vec3, b *vec3) vec3 {
 	}
 }
 
+func Vec3_AddMultiple(vecs ...vec3) vec3 {
+	res := vec3{0, 0, 0}
+	for _, v := range vecs {
+		res = Vec3_Add(&res, &v)
+	}
+	return res
+}
+
 func Vec3_Sub(a *vec3, b *vec3) vec3 {
 	return vec3{
 		a.x - b.x,
 		a.y - b.y,
 		a.z - b.z,
 	}
+}
+
+func Vec3_SubMultiple(original *vec3, vecs ...vec3) vec3 {
+	res := *original
+	for _, v := range vecs {
+		res = Vec3_Sub(&res, &v)
+	}
+	return res
 }
 
 func Vec3_Mul(a *vec3, b *vec3) vec3 {
@@ -134,3 +146,5 @@ func Vec3_Cross(u *vec3, v *vec3) vec3 {
 func Vec3_UnitVector(v *vec3) vec3 {
 	return Vec3_FDiv(v, v.Length())
 }
+
+type point3 = vec3
