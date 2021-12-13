@@ -8,7 +8,7 @@ type ray struct {
 }
 
 func (r *ray) at(t float64) point3 {
-	d := Vec3_FMul(&r.direction, t)
+	d := r.direction.Mul(t)
 	return Vec3_Add(&r.origin, &d)
 }
 

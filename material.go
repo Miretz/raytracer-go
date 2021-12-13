@@ -31,7 +31,7 @@ func (l *metal) Scatter(rayIn *ray, rec *hit_record, attenuation *color, scatter
 	unitDir := Vec3_UnitVector(&rayIn.direction)
 	reflected := Vec3_Reflect(&unitDir, &rec.normal)
 	randomInUnit := Vec3_RandomInUnitSphere()
-	*scattered = ray{rec.p, Vec3_AddMultiple(reflected, Vec3_FMul(&randomInUnit, l.fuzz))}
+	*scattered = ray{rec.p, Vec3_AddMultiple(reflected, randomInUnit.Mul(l.fuzz))}
 	*attenuation = l.albedo
 	return Vec3_Dot(&scattered.direction, &rec.normal) > 0
 }
