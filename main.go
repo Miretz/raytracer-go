@@ -11,7 +11,7 @@ func writePPM() {
 
 	// Image
 	const aspectRatio = 16.0 / 9.0
-	const imageWidth = 400
+	const imageWidth = 1920
 	const imageHeight = int(imageWidth / aspectRatio)
 	const outputFile = "./output.ppm"
 
