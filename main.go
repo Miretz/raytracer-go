@@ -27,11 +27,16 @@ func writePPM() {
 	world.Add(&sphere{point3{0.0, -100.5, -1.0}, 100.0, &materialGround})
 	world.Add(&sphere{point3{0.0, 0.0, -1.0}, 0.5, &materialCenter})
 	world.Add(&sphere{point3{-1.0, 0.0, -1.0}, 0.5, &materialLeft})
-	world.Add(&sphere{point3{-1.0, 0.0, -1.0}, -0.4, &materialLeft})
+	world.Add(&sphere{point3{-1.0, 0.0, -1.0}, -0.45, &materialLeft})
 	world.Add(&sphere{point3{1.0, 0.0, -1.0}, 0.5, &materialRight})
 
 	// Camera
-	cam := NewCamera()
+	cam := NewCamera(
+		point3{-2, 2, 1},
+		point3{0, 0, -1},
+		vec3{0, 1, 0},
+		20,
+		aspectRatio)
 
 	// Render
 	file, err := os.Create(outputFile)

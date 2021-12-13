@@ -144,7 +144,7 @@ func Vec3_Dot(a *vec3, b *vec3) float64 {
 
 func Vec3_Cross(u *vec3, v *vec3) vec3 {
 	return vec3{
-		u.Get(1)*v.Get(1) - u.Get(2)*v.Get(1),
+		u.Get(1)*v.Get(2) - u.Get(2)*v.Get(1),
 		u.Get(2)*v.Get(0) - u.Get(0)*v.Get(2),
 		u.Get(0)*v.Get(1) - u.Get(1)*v.Get(0),
 	}
