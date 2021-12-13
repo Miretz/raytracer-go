@@ -201,4 +201,13 @@ func Vec3_Refract(uv *vec3, n *vec3, etaiOverEtat float64) vec3 {
 	return Vec3_Add(&rOutPerp, &rOutParallel)
 }
 
+func Vec3_RandomInUnitDisk() vec3 {
+	for {
+		p := vec3{RandomFloatBetween(-1, 1), RandomFloatBetween(-1, 1), 0}
+		if p.LengthSquared() < 1 {
+			return p
+		}
+	}
+}
+
 type point3 = vec3

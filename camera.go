@@ -7,36 +7,52 @@ type camera struct {
 	lowerLeftCorner point3
 	horizontal      vec3
 	vertical        vec3
+	u               vec3
+	v               vec3
+	w               vec3
+	lensRadius      float64
 }
 
 func NewCamera(lookfrom point3, lookat point3, vup vec3,
-	vFov float64, aspectRatio float64) camera {
+	vFov float64, aspectRatio float64,
+	aperture float64, focusDist float64) camera {
 	theta := DegreesToRadians(vFov)
 	h := math.Tan(theta / 2)
 	viewportHeight := 2.0 * h
 	viewportWidth := aspectRatio * viewportHeight
 
-	diffLook := Vec3_Sub(&lookfrom, &lookat)
-	w := Vec3_UnitVector(&diffLook)
-	cross := Vec3_Cross(&vup, &w)
-	u := Vec3_UnitVector(&cross)
-	v := Vec3_Cross(&w, &u)
-
 	c := camera{}
+
+	diffLook := Vec3_Sub(&lookfrom, &lookat)
+	c.w = Vec3_UnitVector(&diffLook)
+	cross := Vec3_Cross(&vup, &c.w)
+	c.u = Vec3_UnitVector(&cross)
+	c.v = Vec3_Cross(&c.w, &c.u)
+
 	c.origin = lookfrom
-	c.horizontal = Vec3_FMul(&u, viewportWidth)
-	c.vertical = Vec3_FMul(&v, viewportHeight)
+	c.horizontal = c.u.Mul(viewportWidth * focusDist)
+	c.vertical = c.v.Mul(viewportHeight * focusDist)
 	c.lowerLeftCorner = c.origin.SubMultiple(
 		c.horizontal.Div(2.0),
 		c.vertical.Div(2.0),
-		w)
+		c.w.Mul(focusDist))
+	c.lensRadius = aperture / 2
 	return c
 }
 
 func (c *camera) GetRay(s, t float64) ray {
-	return ray{c.origin, Vec3_AddMultiple(
-		c.lowerLeftCorner,
-		c.horizontal.Mul(s),
-		c.vertical.Mul(t),
-		c.origin.Neg())}
+	rndDisk := Vec3_RandomInUnitDisk()
+	rd := rndDisk.Mul(c.lensRadius)
+	offset := Vec3_AddMultiple(
+		c.u.Mul(rd.x),
+		c.v.Mul(rd.y))
+	return ray{
+		c.origin.Add(&offset),
+		Vec3_AddMultiple(
+			c.lowerLeftCorner,
+			c.horizontal.Mul(s),
+			c.vertical.Mul(t),
+			c.origin.Neg(),
+			offset.Neg())}
+
 }

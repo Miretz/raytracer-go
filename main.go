@@ -31,12 +31,14 @@ func writePPM() {
 	world.Add(&sphere{point3{1.0, 0.0, -1.0}, 0.5, &materialRight})
 
 	// Camera
-	cam := NewCamera(
-		point3{-2, 2, 1},
-		point3{0, 0, -1},
-		vec3{0, 1, 0},
-		20,
-		aspectRatio)
+	lookfrom := point3{3, 3, 2}
+	lookat := point3{0, 0, -1}
+	vup := vec3{0, 1, 0}
+	dist := lookfrom.Sub(&lookat)
+	distToFocus := dist.Length()
+	aperture := 2.0
+	cam := NewCamera(lookfrom, lookat, vup, 20,
+		aspectRatio, aperture, distToFocus)
 
 	// Render
 	file, err := os.Create(outputFile)
