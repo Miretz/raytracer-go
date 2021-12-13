@@ -191,4 +191,14 @@ func Vec3_Reflect(v, n *vec3) vec3 {
 	return Vec3_SubMultiple(v, Vec3_FMul(n, 2.0*Vec3_Dot(v, n)))
 }
 
+func Vec3_Refract(uv *vec3, n *vec3, etaiOverEtat float64) vec3 {
+	negUv := uv.Neg()
+	cosTheta := math.Min(Vec3_Dot(&negUv, n), 1.0)
+	tmp := Vec3_AddMultiple(*uv, Vec3_FMul(n, cosTheta))
+	rOutPerp := Vec3_FMul(&tmp, etaiOverEtat)
+	parallelMul := -math.Sqrt(math.Abs(1.0 - rOutPerp.LengthSquared()))
+	rOutParallel := Vec3_FMul(n, parallelMul)
+	return Vec3_Add(&rOutPerp, &rOutParallel)
+}
+
 type point3 = vec3
