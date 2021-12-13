@@ -15,6 +15,11 @@ func writePPM() {
 	const imageHeight = int(imageWidth / aspectRatio)
 	const outputFile = "./output.ppm"
 
+	// World
+	world := hittable_list{}
+	world.Add(&sphere{point3{0, 0, -1}, 0.5})
+	world.Add(&sphere{point3{0, -100.5, -1}, 100})
+
 	// Camera
 	viewportHeight := 2.0
 	viewportWidth := aspectRatio * viewportHeight
@@ -51,7 +56,7 @@ func writePPM() {
 				horizontal.Mul(u),
 				vertical.Mul(v),
 				origin.Neg())}
-			pixelColor := Ray_Color(&r)
+			pixelColor := Ray_Color(&r, &world)
 			linesToWrite = append(linesToWrite, WriteColor(&pixelColor))
 		}
 	}
