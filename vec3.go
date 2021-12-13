@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"math"
+	"math/rand"
 )
 
 type vec3 struct {
@@ -11,58 +11,30 @@ type vec3 struct {
 	z float64
 }
 
-func (a *vec3) Get(i int) float64 {
-	switch i {
-	case 0:
-		return a.x
-	case 1:
-		return a.y
-	case 2:
-		return a.z
-	default:
-		return 0
-	}
-}
-
-func (a *vec3) GetRef(i int) *float64 {
-	switch i {
-	case 0:
-		return &a.x
-	case 1:
-		return &a.y
-	case 2:
-		return &a.z
-	default:
-		return nil
-	}
-}
-
 func (a *vec3) Neg() vec3 {
 	return vec3{-a.x, -a.y, -a.z}
 }
 
-func (a *vec3) Add(b *vec3) vec3 {
-	return Vec3_Add(a, b)
+func (a *vec3) AddAssign(b *vec3) {
+	a.x += b.x
+	a.y += b.y
+	a.z += b.z
 }
 
-func (a *vec3) Sub(b *vec3) vec3 {
-	return Vec3_Sub(a, b)
+func (a *vec3) SubAssign(b *vec3) {
+	a.x -= b.x
+	a.y -= b.y
+	a.z -= b.z
 }
 
-func (a *vec3) AddMultiple(vecs ...vec3) vec3 {
-	return Vec3_AddMultiple(append(vecs, *a)...)
+func (a *vec3) MulAssign(t float64) {
+	a.x *= t
+	a.y *= t
+	a.z *= t
 }
 
-func (a *vec3) SubMultiple(vecs ...vec3) vec3 {
-	return Vec3_SubMultiple(a, vecs...)
-}
-
-func (a *vec3) Mul(t float64) vec3 {
-	return vec3{a.x * t, a.y * t, a.z * t}
-}
-
-func (a *vec3) Div(t float64) vec3 {
-	return a.Mul(1 / t)
+func (a *vec3) DivAssign(t float64) {
+	a.MulAssign(1.0 / t)
 }
 
 func (a *vec3) Length() float64 {
@@ -70,7 +42,7 @@ func (a *vec3) Length() float64 {
 }
 
 func (a *vec3) LengthSquared() float64 {
-	return (a.x * a.x) + (a.y * a.y) + (a.z * a.z)
+	return a.x*a.x + a.y*a.y + a.z*a.z
 }
 
 func (a *vec3) NearZero() bool {
@@ -82,38 +54,32 @@ func (a *vec3) NearZero() bool {
 
 // Utility functions
 
-func Vec3_Print(v *vec3) string {
-	return fmt.Sprintf("%4.f %4.f %4.f", v.x, v.y, v.z)
+func Vec3_Sub(a *vec3, b *vec3) vec3 {
+	return vec3{
+		a.x - b.x,
+		a.y - b.y,
+		a.z - b.z}
 }
 
 func Vec3_Add(a *vec3, b *vec3) vec3 {
 	return vec3{
 		a.x + b.x,
 		a.y + b.y,
-		a.z + b.z,
-	}
+		a.z + b.z}
 }
 
 func Vec3_AddMultiple(vecs ...vec3) vec3 {
 	res := vec3{0, 0, 0}
 	for _, v := range vecs {
-		res = Vec3_Add(&res, &v)
+		res.AddAssign(&v)
 	}
 	return res
-}
-
-func Vec3_Sub(a *vec3, b *vec3) vec3 {
-	return vec3{
-		a.x - b.x,
-		a.y - b.y,
-		a.z - b.z,
-	}
 }
 
 func Vec3_SubMultiple(original *vec3, vecs ...vec3) vec3 {
 	res := *original
 	for _, v := range vecs {
-		res = Vec3_Sub(&res, &v)
+		res.SubAssign(&v)
 	}
 	return res
 }
@@ -144,10 +110,14 @@ func Vec3_Dot(a *vec3, b *vec3) float64 {
 
 func Vec3_Cross(u *vec3, v *vec3) vec3 {
 	return vec3{
-		u.Get(1)*v.Get(2) - u.Get(2)*v.Get(1),
-		u.Get(2)*v.Get(0) - u.Get(0)*v.Get(2),
-		u.Get(0)*v.Get(1) - u.Get(1)*v.Get(0),
+		u.y*v.z - u.z*v.y,
+		u.z*v.x - u.x*v.z,
+		u.x*v.y - u.y*v.x,
 	}
+}
+
+func Vec3_LengthSquared(a *vec3) float64 {
+	return a.x*a.x + a.y*a.y + a.z*a.z
 }
 
 func Vec3_UnitVector(v *vec3) vec3 {
@@ -155,7 +125,7 @@ func Vec3_UnitVector(v *vec3) vec3 {
 }
 
 func Vec3_Random() vec3 {
-	return vec3{RandomFloat(), RandomFloat(), RandomFloat()}
+	return vec3{rand.Float64(), rand.Float64(), rand.Float64()}
 }
 
 func Vec3_RandomBetween(min, max float64) vec3 {
@@ -198,13 +168,17 @@ func Vec3_Refract(uv *vec3, n *vec3, etaiOverEtat float64) vec3 {
 	rOutPerp := Vec3_FMul(&tmp, etaiOverEtat)
 	parallelMul := -math.Sqrt(math.Abs(1.0 - rOutPerp.LengthSquared()))
 	rOutParallel := Vec3_FMul(n, parallelMul)
-	return Vec3_Add(&rOutPerp, &rOutParallel)
+	rOutPerp.AddAssign(&rOutParallel)
+	return rOutPerp
 }
 
 func Vec3_RandomInUnitDisk() vec3 {
 	for {
-		p := vec3{RandomFloatBetween(-1, 1), RandomFloatBetween(-1, 1), 0}
-		if p.LengthSquared() < 1 {
+		p := vec3{
+			RandomFloatBetween(-1.0, 1.0),
+			RandomFloatBetween(-1.0, 1.0),
+			0.0}
+		if p.LengthSquared() < 1.0 {
 			return p
 		}
 	}

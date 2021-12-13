@@ -19,4 +19,5 @@ func (h *hit_record) SetFaceNormal(r *ray, outwardNormal *vec3) {
 
 type hittable interface {
 	Hit(r *ray, tMin float64, tMax float64, rec *hit_record) bool
+	GetCenter() point3
 }

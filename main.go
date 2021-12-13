@@ -4,9 +4,19 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"sync"
 	"time"
 )
+
+// Image
+const aspectRatio = 3.0 / 2.0
+const imageWidth = 1200
+const imageHeight = int(imageWidth / aspectRatio)
+const outputFile = "./output.ppm"
+const samplesPerPixel = 500
+const maxDepth = 50
 
 func randomScene() hittable_list {
 	world := hittable_list{}
@@ -14,13 +24,15 @@ func randomScene() hittable_list {
 	var groundMateial material = &lambertian{color{0.5, 0.5, 0.5}}
 	world.Add(&sphere{point3{0, -1000, 0}, 1000, &groundMateial})
 
+	maxDist := point3{4, 0.2, 0}
+
 	for a := -11; a < 11; a++ {
 		for b := -11; b < 11; b++ {
-			chooseMat := RandomFloat()
-			center := point3{float64(a) + 0.9*RandomFloat(),
-				0.2, float64(b) + 0.9*RandomFloat()}
+			chooseMat := rand.Float64()
+			center := point3{float64(a) + 0.9*rand.Float64(),
+				0.2, float64(b) + 0.9*rand.Float64()}
 
-			subPoint := center.Sub(&point3{4, 0.2, 0})
+			subPoint := Vec3_Sub(&center, &maxDist)
 			if subPoint.Length() > 0.9 {
 				var sphereMaterial material = nil
 
@@ -59,17 +71,31 @@ func randomScene() hittable_list {
 	return world
 }
 
-func render() {
+func renderPixel(
+	wg *sync.WaitGroup,
+	j int,
+	world *hittable_list,
+	cam *camera,
+	res *string) {
+	defer wg.Done()
+	const divU = float64(imageWidth - 1)
+	const divV = float64(imageHeight - 1)
+	result := ""
+	for i := 0; i < imageWidth; i++ {
+		pixelColor := color{0, 0, 0}
+		for s := 0; s < samplesPerPixel; s++ {
+			u := (float64(i) + rand.Float64()) / divU
+			v := (float64(j) + rand.Float64()) / divV
+			r := cam.GetRay(u, v)
+			rayColor := Ray_Color(&r, world, maxDepth)
+			pixelColor.AddAssign(&rayColor)
+		}
+		result += WriteColor(&pixelColor, samplesPerPixel)
+	}
+	*res = result
+}
 
-	// Image
-	// TODO: Code needs to be optimized
-	// NOTE: Currently Rendering at a lower resolution than in the book
-	const aspectRatio = 3.0 / 2.0
-	const imageWidth = 600 // 1200
-	const imageHeight = int(imageWidth / aspectRatio)
-	const outputFile = "./output.ppm"
-	const samplesPerPixel = 100 // 500
-	const maxDepth = 50
+func Render() {
 
 	// World
 	world := randomScene()
@@ -83,23 +109,17 @@ func render() {
 	cam := NewCamera(lookfrom, lookat, vup, 20,
 		aspectRatio, aperture, distToFocus)
 
+	// optimization - sort objects by distance
+	world.SortByDistance(&lookfrom)
+
 	// Render
-	linesToWrite := make([]string, imageHeight*imageWidth)
-	index := 0
-	for j := imageHeight - 1; j >= 0; j-- {
-		for i := 0; i < imageWidth; i++ {
-			pixelColor := color{0, 0, 0}
-			for s := 0; s < samplesPerPixel; s++ {
-				u := (float64(i) + RandomFloat()) / float64(imageWidth-1)
-				v := (float64(j) + RandomFloat()) / float64(imageHeight-1)
-				r := cam.GetRay(u, v)
-				rayColor := Ray_Color(&r, &world, maxDepth)
-				pixelColor = pixelColor.Add(&rayColor)
-			}
-			linesToWrite[index] = WriteColor(&pixelColor, samplesPerPixel)
-			index++
-		}
+	var wg sync.WaitGroup
+	linesToWrite := make([]string, imageHeight)
+	for j := imageHeight - 1; j >= 1; j-- {
+		wg.Add(1)
+		go renderPixel(&wg, j, &world, &cam, &linesToWrite[imageHeight-j])
 	}
+	wg.Wait()
 
 	// Write to file
 	file, err := os.Create(outputFile)
@@ -109,19 +129,18 @@ func render() {
 	writer := bufio.NewWriter(file)
 	writer.WriteString(fmt.Sprintf("P3\n%d %d\n255\n", imageWidth, imageHeight))
 	for _, line := range linesToWrite {
-		_, err := writer.WriteString(line + "\n")
+		_, err := writer.WriteString(line)
 		if err != nil {
 			log.Fatalf("Error while writing to file. Err: %s", err.Error())
 		}
 	}
 	writer.Flush()
-
 }
 
 func main() {
 	start := time.Now()
 
-	render()
+	Render()
 
 	t := time.Now()
 	elapsed := t.Sub(start)

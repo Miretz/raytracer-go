@@ -8,18 +8,22 @@ type ray struct {
 }
 
 func (r *ray) at(t float64) point3 {
-	d := r.direction.Mul(t)
-	return Vec3_Add(&r.origin, &d)
+	d := Vec3_FMul(&r.direction, t)
+	d.AddAssign(&r.origin)
+	return d
 }
 
-func Ray_Color(r *ray, world *hittable_list, depth int) color {
-	rec := hit_record{}
+var bgColor1 color = color{1.0, 1.0, 1.0}
+var bgColor2 color = color{0.5, 0.7, 1.0}
+var emptyColor color = color{0, 0, 0}
 
+func Ray_Color(r *ray, world *hittable_list, depth int) color {
 	if depth < 0 {
-		return color{0, 0, 0}
+		return emptyColor
 	}
 
-	if (*world).Hit(r, 0.001, math.Inf(1), &rec) {
+	var rec hit_record
+	if world.Hit(r, 0.001, math.Inf(1), &rec) {
 		scattered := ray{}
 		attenuation := color{}
 		if (*rec.matPtr).Scatter(r, &rec, &attenuation, &scattered) {
@@ -29,7 +33,8 @@ func Ray_Color(r *ray, world *hittable_list, depth int) color {
 	}
 	unitDirection := Vec3_UnitVector(&r.direction)
 	t := 0.5 * (unitDirection.y + 1.0)
-	r1 := Vec3_FMul(&color{1.0, 1.0, 1.0}, (1.0 - t))
-	r2 := Vec3_FMul(&color{0.5, 0.7, 1.0}, t)
-	return Vec3_Add(&r1, &r2)
+	r1 := Vec3_FMul(&bgColor1, (1.0 - t))
+	r2 := Vec3_FMul(&bgColor2, t)
+	r1.AddAssign(&r2)
+	return r1
 }

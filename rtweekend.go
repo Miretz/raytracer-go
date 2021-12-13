@@ -8,12 +8,8 @@ func DegreesToRadians(degrees float64) float64 {
 	return degrees * Pi / 180.0
 }
 
-func RandomFloat() float64 {
-	return rand.Float64()
-}
-
 func RandomFloatBetween(min, max float64) float64 {
-	return min + (max-min)*RandomFloat()
+	return min + (max-min)*rand.Float64()
 }
 
 func Clamp(x, min, max float64) float64 {
