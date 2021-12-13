@@ -73,6 +73,13 @@ func (a *vec3) LengthSquared() float64 {
 	return (a.x * a.x) + (a.y * a.y) + (a.z * a.z)
 }
 
+func (a *vec3) NearZero() bool {
+	const s = 1e-8
+	return (math.Abs(a.x) < s) &&
+		(math.Abs(a.y) < s) &&
+		(math.Abs(a.z) < s)
+}
+
 // Utility functions
 
 func Vec3_Print(v *vec3) string {
@@ -178,6 +185,10 @@ func Vec3_RandomInHemisphere(normal *vec3) vec3 {
 		return inUnitSphere
 	}
 	return inUnitSphere.Neg()
+}
+
+func Vec3_Reflect(v, n *vec3) vec3 {
+	return Vec3_SubMultiple(v, Vec3_FMul(n, 2.0*Vec3_Dot(v, n)))
 }
 
 type point3 = vec3

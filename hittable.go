@@ -5,6 +5,7 @@ type hit_record struct {
 	normal    vec3
 	t         float64
 	frontFace bool
+	matPtr    *material
 }
 
 func (h *hit_record) SetFaceNormal(r *ray, outwardNormal *vec3) {

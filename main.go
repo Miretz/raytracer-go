@@ -19,8 +19,15 @@ func writePPM() {
 
 	// World
 	world := hittable_list{}
-	world.Add(&sphere{point3{0, 0, -1}, 0.5})
-	world.Add(&sphere{point3{0, -100.5, -1}, 100})
+	var materialGround material = &lambertian{color{0.8, 0.8, 0.0}}
+	var materialCenter material = &lambertian{color{0.7, 0.3, 0.3}}
+	var materialLeft material = &metal{color{0.8, 0.8, 0.8}, 0.3}
+	var materialRight material = &metal{color{0.8, 0.6, 0.2}, 1.0}
+
+	world.Add(&sphere{point3{0.0, -100.5, -1.0}, 100.0, &materialGround})
+	world.Add(&sphere{point3{0.0, 0.0, -1.0}, 0.5, &materialCenter})
+	world.Add(&sphere{point3{-1.0, 0.0, -1.0}, 0.5, &materialLeft})
+	world.Add(&sphere{point3{1.0, 0.0, -1.0}, 0.5, &materialRight})
 
 	// Camera
 	cam := NewCamera()

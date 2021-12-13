@@ -5,6 +5,7 @@ import "math"
 type sphere struct {
 	center point3
 	radius float64
+	matPtr *material
 }
 
 func (s *sphere) Hit(r *ray, tMin float64, tMax float64, rec *hit_record) bool {
@@ -31,5 +32,6 @@ func (s *sphere) Hit(r *ray, tMin float64, tMax float64, rec *hit_record) bool {
 	temp := Vec3_Sub(&rec.p, &s.center)
 	outwardNormal := Vec3_FDiv(&temp, s.radius)
 	rec.SetFaceNormal(r, &outwardNormal)
+	rec.matPtr = s.matPtr
 	return true
 }

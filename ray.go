@@ -20,11 +20,12 @@ func Ray_Color(r *ray, world *hittable_list, depth int) color {
 	}
 
 	if (*world).Hit(r, 0.001, math.Inf(1), &rec) {
-		//target := Vec3_AddMultiple(rec.p, rec.normal, Vec3_RandomUnitVector())
-		target := Vec3_AddMultiple(rec.p, Vec3_RandomInHemisphere(&rec.normal))
-		newRay := ray{rec.p, Vec3_Sub(&target, &rec.p)}
-		rc := Ray_Color(&newRay, world, depth-1)
-		return Vec3_FMul(&rc, 0.5)
+		scattered := ray{}
+		attenuation := color{}
+		if (*rec.matPtr).Scatter(r, &rec, &attenuation, &scattered) {
+			rc := Ray_Color(&scattered, world, depth-1)
+			return Vec3_Mul(&attenuation, &rc)
+		}
 	}
 	unitDirection := Vec3_UnitVector(&r.direction)
 	t := 0.5 * (unitDirection.y + 1.0)
