@@ -147,4 +147,37 @@ func Vec3_UnitVector(v *vec3) vec3 {
 	return Vec3_FDiv(v, v.Length())
 }
 
+func Vec3_Random() vec3 {
+	return vec3{RandomFloat(), RandomFloat(), RandomFloat()}
+}
+
+func Vec3_RandomBetween(min, max float64) vec3 {
+	return vec3{
+		RandomFloatBetween(min, max),
+		RandomFloatBetween(min, max),
+		RandomFloatBetween(min, max)}
+}
+
+func Vec3_RandomInUnitSphere() vec3 {
+	for {
+		p := Vec3_RandomBetween(-1.0, 1.0)
+		if p.LengthSquared() < 1.0 {
+			return p
+		}
+	}
+}
+
+func Vec3_RandomUnitVector() vec3 {
+	t := Vec3_RandomInUnitSphere()
+	return Vec3_UnitVector(&t)
+}
+
+func Vec3_RandomInHemisphere(normal *vec3) vec3 {
+	inUnitSphere := Vec3_RandomInUnitSphere()
+	if Vec3_Dot(&inUnitSphere, normal) > 0.0 {
+		return inUnitSphere
+	}
+	return inUnitSphere.Neg()
+}
+
 type point3 = vec3

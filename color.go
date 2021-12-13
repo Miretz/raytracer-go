@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type color = vec3
 
@@ -10,9 +13,9 @@ func WriteColor(pixelColor *color, samplesPerPixel int) string {
 	b := pixelColor.z
 
 	scale := 1.0 / float64(samplesPerPixel)
-	r *= scale
-	g *= scale
-	b *= scale
+	r = math.Sqrt(scale * r)
+	g = math.Sqrt(scale * g)
+	b = math.Sqrt(scale * b)
 
 	return fmt.Sprintf("%d %d %d",
 		int32(256*Clamp(r, 0.0, 0.999)),

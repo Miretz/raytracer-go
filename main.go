@@ -15,6 +15,7 @@ func writePPM() {
 	const imageHeight = int(imageWidth / aspectRatio)
 	const outputFile = "./output.ppm"
 	const samplesPerPixel = 100
+	const maxDepth = 50
 
 	// World
 	world := hittable_list{}
@@ -44,7 +45,7 @@ func writePPM() {
 				u := (float64(i) + RandomFloat()) / float64(imageWidth-1)
 				v := (float64(j) + RandomFloat()) / float64(imageHeight-1)
 				r := cam.GetRay(u, v)
-				rayColor := Ray_Color(&r, &world)
+				rayColor := Ray_Color(&r, &world, maxDepth)
 				pixelColor = pixelColor.Add(&rayColor)
 			}
 			toWrite := WriteColor(&pixelColor, samplesPerPixel)
