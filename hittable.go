@@ -13,11 +13,10 @@ func (h *hit_record) SetFaceNormal(r *ray, outwardNormal *vec3) {
 	if h.frontFace {
 		h.normal = *outwardNormal
 	} else {
-		h.normal = (*outwardNormal).Neg()
+		h.normal = *outwardNormal.Neg()
 	}
 }
 
 type hittable interface {
-	Hit(r *ray, tMin float64, tMax float64, rec *hit_record) bool
-	GetCenter() point3
+	Hit(r *ray, tMin float64, tMax float64) (bool, *hit_record)
 }

@@ -6,23 +6,19 @@ import (
 )
 
 type material interface {
-	Scatter(rayIn *ray, rec *hit_record, attenuation *color, scattered *ray) bool
+	Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray)
 }
 
 type lambertian struct {
 	albedo color
 }
 
-func (l *lambertian) Scatter(rayIn *ray, rec *hit_record, attenuation *color, scattered *ray) bool {
-	scatterDirection := Vec3_AddMultiple(rec.normal, Vec3_RandomUnitVector())
-
+func (l *lambertian) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
+	scatterDirection := Vec3_AddMultiple(&rec.normal, Vec3_RandomUnitVector())
 	if scatterDirection.NearZero() {
-		scatterDirection = rec.normal
+		scatterDirection = &rec.normal
 	}
-
-	*scattered = ray{rec.p, scatterDirection}
-	*attenuation = l.albedo
-	return true
+	return true, &l.albedo, &ray{rec.p, *scatterDirection}
 }
 
 type metal struct {
@@ -30,14 +26,13 @@ type metal struct {
 	fuzz   float64
 }
 
-func (l *metal) Scatter(rayIn *ray, rec *hit_record, attenuation *color, scattered *ray) bool {
-	unitDir := Vec3_UnitVector(&rayIn.direction)
-	reflected := Vec3_Reflect(&unitDir, &rec.normal)
+func (l *metal) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
+	reflected := Vec3_Reflect(Vec3_UnitVector(&rayIn.direction), &rec.normal)
 	randomInUnit := Vec3_RandomInUnitSphere()
 	randomInUnit.MulAssign(l.fuzz)
-	*scattered = ray{rec.p, Vec3_Add(&reflected, &randomInUnit)}
-	*attenuation = l.albedo
-	return Vec3_Dot(&scattered.direction, &rec.normal) > 0
+	scattered := &ray{rec.p, *Vec3_Add(reflected, randomInUnit)}
+	isScatter := Vec3_Dot(&scattered.direction, &rec.normal) > 0
+	return isScatter, &l.albedo, scattered
 }
 
 type dielectric struct {
@@ -46,24 +41,23 @@ type dielectric struct {
 
 var defaultGlassColor color = color{1.0, 1.0, 1.0}
 
-func (l *dielectric) Scatter(rayIn *ray, rec *hit_record, attenuation *color, scattered *ray) bool {
-	*attenuation = defaultGlassColor
+func (l *dielectric) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
 	refractionRatio := l.ir
 	if rec.frontFace {
 		refractionRatio = 1.0 / l.ir
 	}
 	unitDirection := Vec3_UnitVector(&rayIn.direction)
-	unitDirNeg := unitDirection.Neg()
-	cosTheta := math.Min(Vec3_Dot(&unitDirNeg, &rec.normal), 1.0)
+	cosTheta := math.Min(Vec3_Dot(unitDirection.Neg(), &rec.normal), 1.0)
 	sinTheta := math.Sqrt(1.0 - cosTheta*cosTheta)
 	cannotRefract := refractionRatio*sinTheta > 1.0
 
+	var scattered *ray
 	if cannotRefract || l.reflectance(cosTheta, refractionRatio) > rand.Float64() {
-		*scattered = ray{rec.p, Vec3_Reflect(&unitDirection, &rec.normal)}
+		scattered = &ray{rec.p, *Vec3_Reflect(unitDirection, &rec.normal)}
 	} else {
-		*scattered = ray{rec.p, Vec3_Refract(&unitDirection, &rec.normal, refractionRatio)}
+		scattered = &ray{rec.p, *Vec3_Refract(unitDirection, &rec.normal, refractionRatio)}
 	}
-	return true
+	return true, &defaultGlassColor, scattered
 }
 
 func (l *dielectric) reflectance(cosine, refIdx float64) float64 {

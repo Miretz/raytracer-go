@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -40,14 +41,14 @@ func randomScene() hittable_list {
 					// diffuse
 					r1 := Vec3_Random()
 					r2 := Vec3_Random()
-					albedo := Vec3_Mul(&r1, &r2)
-					sphereMaterial = &lambertian{albedo}
+					albedo := Vec3_Mul(r1, r2)
+					sphereMaterial = &lambertian{*albedo}
 					world.Add(&sphere{center, 0.2, &sphereMaterial})
 				} else if chooseMat < 0.95 {
 					// metal
 					albedo := Vec3_RandomBetween(0.5, 1)
 					fuzz := RandomFloatBetween(0, 0.5)
-					sphereMaterial = &metal{albedo, fuzz}
+					sphereMaterial = &metal{*albedo, fuzz}
 					world.Add(&sphere{center, 0.2, &sphereMaterial})
 				} else {
 					// glass
@@ -80,19 +81,17 @@ func renderPixel(
 	defer wg.Done()
 	const divU = float64(imageWidth - 1)
 	const divV = float64(imageHeight - 1)
-	result := ""
+	result := make([]string, imageWidth)
 	for i := 0; i < imageWidth; i++ {
 		pixelColor := color{0, 0, 0}
 		for s := 0; s < samplesPerPixel; s++ {
 			u := (float64(i) + rand.Float64()) / divU
 			v := (float64(j) + rand.Float64()) / divV
-			r := cam.GetRay(u, v)
-			rayColor := Ray_Color(&r, world, maxDepth)
-			pixelColor.AddAssign(&rayColor)
+			pixelColor.AddAssign(Ray_Color(cam.GetRay(u, v), world, maxDepth))
 		}
-		result += WriteColor(&pixelColor, samplesPerPixel)
+		result[i] = WriteColor(&pixelColor, samplesPerPixel)
 	}
-	*res = result
+	*res = strings.Join(result, "")
 }
 
 func Render() {
@@ -109,15 +108,12 @@ func Render() {
 	cam := NewCamera(lookfrom, lookat, vup, 20,
 		aspectRatio, aperture, distToFocus)
 
-	// optimization - sort objects by distance
-	world.SortByDistance(&lookfrom)
-
 	// Render
 	var wg sync.WaitGroup
 	linesToWrite := make([]string, imageHeight)
-	for j := imageHeight - 1; j >= 1; j-- {
+	for j := imageHeight - 1; j >= 0; j-- {
 		wg.Add(1)
-		go renderPixel(&wg, j, &world, &cam, &linesToWrite[imageHeight-j])
+		go renderPixel(&wg, j, &world, &cam, &linesToWrite[imageHeight-j-1])
 	}
 	wg.Wait()
 

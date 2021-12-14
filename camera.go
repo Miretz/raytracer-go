@@ -23,16 +23,14 @@ func NewCamera(lookfrom point3, lookat point3, vup vec3,
 
 	c := camera{}
 
-	diffLook := Vec3_Sub(&lookfrom, &lookat)
-	c.w = Vec3_UnitVector(&diffLook)
-	cross := Vec3_Cross(&vup, &c.w)
-	c.u = Vec3_UnitVector(&cross)
-	c.v = Vec3_Cross(&c.w, &c.u)
+	c.w = *Vec3_UnitVector(Vec3_Sub(&lookfrom, &lookat))
+	c.u = *Vec3_UnitVector(Vec3_Cross(&vup, &c.w))
+	c.v = *Vec3_Cross(&c.w, &c.u)
 
 	c.origin = lookfrom
-	c.horizontal = Vec3_FMul(&c.u, viewportWidth*focusDist)
-	c.vertical = Vec3_FMul(&c.v, viewportHeight*focusDist)
-	c.lowerLeftCorner = Vec3_SubMultiple(
+	c.horizontal = *Vec3_FMul(&c.u, viewportWidth*focusDist)
+	c.vertical = *Vec3_FMul(&c.v, viewportHeight*focusDist)
+	c.lowerLeftCorner = *Vec3_SubMultiple(
 		&c.origin,
 		Vec3_FDiv(&c.horizontal, 2.0),
 		Vec3_FDiv(&c.vertical, 2.0),
@@ -41,16 +39,15 @@ func NewCamera(lookfrom point3, lookat point3, vup vec3,
 	return c
 }
 
-func (c *camera) GetRay(s, t float64) ray {
-	rd := Vec3_RandomInUnitDisk()
-	rd.MulAssign(c.lensRadius)
-	offset := Vec3_AddMultiple(
+func (c *camera) GetRay(s, t float64) *ray {
+	rd := Vec3_FMul(Vec3_RandomInUnitDisk(), c.lensRadius)
+	offset := Vec3_Add(
 		Vec3_FMul(&c.u, rd.x),
 		Vec3_FMul(&c.v, rd.y))
-	return ray{
-		Vec3_AddMultiple(c.origin, offset),
-		Vec3_AddMultiple(
-			c.lowerLeftCorner,
+	return &ray{
+		*Vec3_Add(&c.origin, offset),
+		*Vec3_AddMultiple(
+			&c.lowerLeftCorner,
 			Vec3_FMul(&c.horizontal, s),
 			Vec3_FMul(&c.vertical, t),
 			c.origin.Neg(),
