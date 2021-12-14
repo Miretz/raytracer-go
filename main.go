@@ -12,10 +12,10 @@ import (
 
 // Image
 const aspectRatio = 3.0 / 2.0
-const imageWidth = 1200
+const imageWidth = 600
 const imageHeight = int(imageWidth / aspectRatio)
 const outputFile = "./output.ppm"
-const samplesPerPixel = 500
+const samplesPerPixel = 100
 const maxDepth = 50
 
 func randomScene() hittable_list {
