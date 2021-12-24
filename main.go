@@ -72,12 +72,17 @@ func randomScene() hittable_list {
 	return world
 }
 
+type renderPixelResult struct {
+	id    int
+	value string
+}
+
 func renderPixel(
 	wg *sync.WaitGroup,
 	j int,
 	world *hittable_list,
 	cam *camera,
-	res *string) {
+	result chan<- renderPixelResult) {
 	defer wg.Done()
 	const divU = float64(imageWidth - 1)
 	const divV = float64(imageHeight - 1)
@@ -91,7 +96,7 @@ func renderPixel(
 		}
 		builder.WriteString(WriteColor(&pixelColor, samplesPerPixel))
 	}
-	*res = builder.String()
+	result <- renderPixelResult{imageHeight - j - 1, builder.String()}
 }
 
 func Render() {
@@ -110,12 +115,19 @@ func Render() {
 
 	// Render
 	var wg sync.WaitGroup
-	linesToWrite := make([]string, imageHeight)
+	resultChan := make(chan renderPixelResult, imageHeight)
 	for j := imageHeight - 1; j >= 0; j-- {
 		wg.Add(1)
-		go renderPixel(&wg, j, &world, &cam, &linesToWrite[imageHeight-j-1])
+		go renderPixel(&wg, j, &world, &cam, resultChan)
 	}
 	wg.Wait()
+
+	// Collect the results
+	linesToWrite := make([]string, imageHeight)
+	for i := 0; i < imageHeight; i++ {
+		res := <-resultChan
+		linesToWrite[res.id] = res.value
+	}
 
 	// Write to file
 	file, err := os.Create(outputFile)

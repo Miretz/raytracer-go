@@ -39,8 +39,6 @@ type dielectric struct {
 	ir float64
 }
 
-var defaultGlassColor color = color{1.0, 1.0, 1.0}
-
 func (l *dielectric) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
 	refractionRatio := l.ir
 	if rec.frontFace {
@@ -57,7 +55,7 @@ func (l *dielectric) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
 	} else {
 		scattered = &ray{*rec.p, *Vec3_Refract(unitDirection, rec.normal, refractionRatio)}
 	}
-	return true, &defaultGlassColor, scattered
+	return true, &color{1.0, 1.0, 1.0}, scattered
 }
 
 func (l *dielectric) reflectance(cosine, refIdx float64) float64 {
