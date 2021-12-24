@@ -13,7 +13,7 @@ func (hl *hittable_list) Add(object hittable) {
 }
 
 func (hl *hittable_list) Hit(r *ray, tMin float64, tMax float64) (bool, *hit_record) {
-	tempRec := new(hit_record)
+	var tempRec *hit_record
 	hitAnything := false
 	closestSoFar := tMax
 

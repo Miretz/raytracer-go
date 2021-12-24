@@ -31,7 +31,7 @@ func (s *sphere) Hit(r *ray, tMin float64, tMax float64) (bool, *hit_record) {
 	rec := hit_record{}
 	rec.t = root
 	rec.p = r.at(rec.t)
-	outwardNormal := Vec3_FDiv(Vec3_Sub(&rec.p, &s.center), s.radius)
+	outwardNormal := Vec3_FDiv(Vec3_Sub(rec.p, &s.center), s.radius)
 	rec.SetFaceNormal(r, outwardNormal)
 	rec.matPtr = s.matPtr
 	return true, &rec

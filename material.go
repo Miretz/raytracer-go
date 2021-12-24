@@ -14,11 +14,11 @@ type lambertian struct {
 }
 
 func (l *lambertian) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
-	scatterDirection := Vec3_AddMultiple(&rec.normal, Vec3_RandomUnitVector())
+	scatterDirection := Vec3_AddMultiple(rec.normal, Vec3_RandomUnitVector())
 	if scatterDirection.NearZero() {
-		scatterDirection = &rec.normal
+		scatterDirection = rec.normal
 	}
-	return true, &l.albedo, &ray{rec.p, *scatterDirection}
+	return true, &l.albedo, &ray{*rec.p, *scatterDirection}
 }
 
 type metal struct {
@@ -27,11 +27,11 @@ type metal struct {
 }
 
 func (l *metal) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
-	reflected := Vec3_Reflect(Vec3_UnitVector(&rayIn.direction), &rec.normal)
+	reflected := Vec3_Reflect(Vec3_UnitVector(&rayIn.direction), rec.normal)
 	randomInUnit := Vec3_RandomInUnitSphere()
 	randomInUnit.MulAssign(l.fuzz)
-	scattered := &ray{rec.p, *Vec3_Add(reflected, randomInUnit)}
-	isScatter := Vec3_Dot(&scattered.direction, &rec.normal) > 0
+	scattered := &ray{*rec.p, *Vec3_Add(reflected, randomInUnit)}
+	isScatter := Vec3_Dot(&scattered.direction, rec.normal) > 0
 	return isScatter, &l.albedo, scattered
 }
 
@@ -47,15 +47,15 @@ func (l *dielectric) Scatter(rayIn *ray, rec *hit_record) (bool, *color, *ray) {
 		refractionRatio = 1.0 / l.ir
 	}
 	unitDirection := Vec3_UnitVector(&rayIn.direction)
-	cosTheta := math.Min(Vec3_Dot(unitDirection.Neg(), &rec.normal), 1.0)
+	cosTheta := math.Min(Vec3_Dot(unitDirection.Neg(), rec.normal), 1.0)
 	sinTheta := math.Sqrt(1.0 - cosTheta*cosTheta)
 	cannotRefract := refractionRatio*sinTheta > 1.0
 
 	var scattered *ray
 	if cannotRefract || l.reflectance(cosTheta, refractionRatio) > rand.Float64() {
-		scattered = &ray{rec.p, *Vec3_Reflect(unitDirection, &rec.normal)}
+		scattered = &ray{*rec.p, *Vec3_Reflect(unitDirection, rec.normal)}
 	} else {
-		scattered = &ray{rec.p, *Vec3_Refract(unitDirection, &rec.normal, refractionRatio)}
+		scattered = &ray{*rec.p, *Vec3_Refract(unitDirection, rec.normal, refractionRatio)}
 	}
 	return true, &defaultGlassColor, scattered
 }

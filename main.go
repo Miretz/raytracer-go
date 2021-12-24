@@ -81,7 +81,7 @@ func renderPixel(
 	defer wg.Done()
 	const divU = float64(imageWidth - 1)
 	const divV = float64(imageHeight - 1)
-	result := make([]string, imageWidth)
+	builder := strings.Builder{}
 	for i := 0; i < imageWidth; i++ {
 		pixelColor := color{0, 0, 0}
 		for s := 0; s < samplesPerPixel; s++ {
@@ -89,9 +89,9 @@ func renderPixel(
 			v := (float64(j) + rand.Float64()) / divV
 			pixelColor.AddAssign(Ray_Color(cam.GetRay(u, v), world, maxDepth))
 		}
-		result[i] = WriteColor(&pixelColor, samplesPerPixel)
+		builder.WriteString(WriteColor(&pixelColor, samplesPerPixel))
 	}
-	*res = strings.Join(result, "")
+	*res = builder.String()
 }
 
 func Render() {

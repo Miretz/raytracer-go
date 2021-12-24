@@ -1,8 +1,8 @@
 package main
 
 type hit_record struct {
-	p         point3
-	normal    vec3
+	p         *point3
+	normal    *vec3
 	t         float64
 	frontFace bool
 	matPtr    *material
@@ -11,9 +11,9 @@ type hit_record struct {
 func (h *hit_record) SetFaceNormal(r *ray, outwardNormal *vec3) {
 	h.frontFace = Vec3_Dot(&r.direction, outwardNormal) < 0
 	if h.frontFace {
-		h.normal = *outwardNormal
+		h.normal = outwardNormal
 	} else {
-		h.normal = *outwardNormal.Neg()
+		h.normal = outwardNormal.Neg()
 	}
 }
 

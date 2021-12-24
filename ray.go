@@ -7,10 +7,10 @@ type ray struct {
 	direction vec3
 }
 
-func (r *ray) at(t float64) point3 {
+func (r *ray) at(t float64) *point3 {
 	d := Vec3_FMul(&r.direction, t)
 	d.AddAssign(&r.origin)
-	return *d
+	return d
 }
 
 var bgColor1 color = color{1.0, 1.0, 1.0}
